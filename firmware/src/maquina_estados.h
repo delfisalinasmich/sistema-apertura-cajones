@@ -19,4 +19,9 @@ void maquinaEstados_actualizar();
 EstadoSistema maquinaEstados_estadoActual();
 const char* maquinaEstados_nombre(EstadoSistema estado);
 
+// Arranca la rutina para la columna pedida (botón físico o /pedido de la web).
+// Solo tiene efecto si el sistema está en REPOSO; cambia el modo a AUTONOMO.
+void maquinaEstados_solicitarPedido(int columna);
+int maquinaEstados_columnaSolicitada();
+
 #endif

@@ -18,7 +18,17 @@ Todos configurados como `INPUT_PULLUP`: presionado = `LOW`.
 |---|---|---|
 | GPIO 32 | BTN_FIN_CARRERA_X | Fin de carrera del riel X (carro llegó a la columna) |
 | GPIO 33 | BTN_FIN_CARRERA_TRANSICION | Fin de carrera de la transición de la ranura bayoneta (extensión → rotación) |
-| GPIO 34 | BTN_PEDIDO | Simula el pedido de columna (hace las veces del endpoint `/pedido` que todavía no existe) |
-| GPIO 35 | BTN_EMERGENCIA | Botón de parada de emergencia |
+| GPIO 34 | BTN_PEDIDO | Pedido de columna (equivalente al endpoint `/pedido` de la web; útil para probar sin WiFi) |
+| GPIO 35 | BTN_EMERGENCIA | Botón de parada de emergencia — es físico a propósito, no depende de la web (ver `docs/modo-manual.md`) |
 
 > GPIO 34 y 35 son solo de entrada en la mayoría de las dev boards ESP32 (sin pull-up interno) — llevan resistencia pull-up externa a 3.3V, o se puede recablear a otro par de pines con pull-up interno si es más simple para el armado en protoboard.
+
+## Modo manual — Access Point del ESP32
+
+| Dato | Valor |
+|---|---|
+| SSID | `CajonesBot` |
+| Contraseña | `cajones123` (TODO: cambiar antes de la demo si hace falta) |
+| IP del ESP32 | `192.168.4.1` (IP por defecto del modo Access Point) |
+
+Conectarse a esa red WiFi desde el celular/notebook y abrir `http://192.168.4.1` en el navegador.
