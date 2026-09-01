@@ -22,6 +22,8 @@ Sketch de banco (`src/`) que corre en una placa **ESP32 dev board** real: la má
 
 Al terminar la rutina autónoma (o al resetear una emergencia), la máquina de estados vuelve sola a `MODO_MANUAL` — no hace falta ninguna acción extra del operador.
 
+El botón físico de pedido se lee **por flanco**, no por nivel: como resetear una emergencia exige mantenerlo presionado (junto con soltar la emergencia), leerlo por nivel haría que el robot arrancara una rutina autónoma solo, apenas se resetea la emergencia. El flanco se rastrea en cada vuelta del loop (no solo cuando el sistema está en modo manual) para que quede consumido mientras el botón se mantuvo presionado durante la emergencia.
+
 ## Nota de diseño: sensores reutilizados en el sketch de banco
 
 El diseño documentado en `docs/diagrama-flujo-estados.md` menciona un "fin de carrera de reposo en Z" para `RETRAYENDO_Z` y una confirmación de posición "home" para `VOLVIENDO_HOME`, pero `docs/sensores-actuadores.md` solo confirma 2 sensores como mínimo (fin de carrera X y fin de carrera de la transición de la ranura). Para no inventar hardware que la cátedra no pidió, el sketch de banco resuelve estas dos fases por **tiempo** (consistente con el fail-safe por gravedad ya documentado para volver a reposo) en vez de por sensor. Si el grupo termina agregando sensores dedicados en el diseño eléctrico final, alcanza con reemplazar esas comparaciones de tiempo por lecturas de `sensores.*` — la lógica del resto de la máquina de estados no cambia.

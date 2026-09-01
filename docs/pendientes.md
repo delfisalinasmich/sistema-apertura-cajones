@@ -27,5 +27,6 @@ Lista de lo que falta decidir antes de poder cerrar la propuesta inicial y empez
 - [x] Definir si el ESP32 actúa como access point o se conecta a una red existente — Access Point propio (`CajonesBot`).
 - [x] Máquina de estados de la rutina autónoma + modo manual vía web, simulados con LEDs/botones sobre ESP32 (`firmware/src/`), compilado y verificado con `arduino-cli`.
 - [x] Tests automáticos de la máquina de estados, sin necesidad de placa (`test/`, ver [test/README.md](../test/README.md)) — 24/24 en verde. Encontraron y corrigieron un bug real: `sensores_iniciar()` no reseteaba el antirrebote de los botones.
-- [ ] Contraseña definitiva del AP antes de la demo (hoy es un valor de prueba en `firmware/src/servidor_web.cpp`).
+- [x] Contraseña definitiva del AP (`AbreCajon26`, ver `firmware/pines.md`).
+- [x] Revisión de código: se corrigió un bug de seguridad en `src.ino` — el botón físico de pedido se leía por nivel, y como el reset de una emergencia exige mantenerlo presionado, el robot podía arrancar una rutina autónoma solo, apenas se reseteaba la emergencia. Ahora se lee por flanco.
 - [ ] Reemplazar `motores.*` y `sensores.*` por el control/lectura real cuando exista la electrónica (drivers de motor, fines de carrera reales) — la máquina de estados y el servidor web no deberían necesitar cambios.

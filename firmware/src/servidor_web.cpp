@@ -7,7 +7,7 @@
 
 // Ver pines.md para el SSID/clave del AP.
 static const char* AP_SSID = "CajonesBot";
-static const char* AP_PASSWORD = "cajones123";
+static const char* AP_PASSWORD = "AbreCajon26";
 
 static WebServer server(80);
 

@@ -28,7 +28,7 @@ Todos configurados como `INPUT_PULLUP`: presionado = `LOW`.
 | Dato | Valor |
 |---|---|
 | SSID | `CajonesBot` |
-| Contraseña | `cajones123` (TODO: cambiar antes de la demo si hace falta) |
+| Contraseña | `AbreCajon26` |
 | IP del ESP32 | `192.168.4.1` (IP por defecto del modo Access Point) |
 
 Conectarse a esa red WiFi desde el celular/notebook y abrir `http://192.168.4.1` en el navegador.
