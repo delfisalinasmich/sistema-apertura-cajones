@@ -1,0 +1,14 @@
+# Build artifacts (Arduino / PlatformIO)
+.pio/
+build/
+*.o
+*.elf
+*.hex
+*.bin
+
+# CAD temp/lock files
+*~
+~$*
+
+# OS
+.DS_Store
