@@ -6,6 +6,9 @@ build/
 *.hex
 *.bin
 
+# Build artifacts (tests nativos, ver test/run_tests.sh)
+test/.build/
+
 # CAD temp/lock files
 *~
 ~$*

@@ -27,11 +27,28 @@ static void actualizarBoton(BotonDebounced &boton) {
   }
 }
 
+// Reinicia el estado de antirrebote de un botón a "no presionado", con el
+// timestamp en el momento real de inicialización (no un 0 fijo) para que
+// sensores_iniciar() deje el módulo en un estado limpio sin importar cuánto
+// llevaba corriendo el reloj (esto es lo que permite reiniciar el módulo
+// entre tests nativos, ver test/test_maquina_estados.cpp).
+static void inicializarBoton(BotonDebounced &boton, int pin) {
+  boton.pin = pin;
+  boton.estadoEstable = HIGH;
+  boton.ultimaLectura = HIGH;
+  boton.ultimoCambioMs = millis();
+}
+
 void sensores_iniciar() {
   pinMode(BTN_FIN_CARRERA_X, INPUT_PULLUP);
   pinMode(BTN_FIN_CARRERA_TRANSICION, INPUT_PULLUP);
   pinMode(BTN_PEDIDO, INPUT_PULLUP);
   pinMode(BTN_EMERGENCIA, INPUT_PULLUP);
+
+  inicializarBoton(botonFinCarreraX, BTN_FIN_CARRERA_X);
+  inicializarBoton(botonFinCarreraTransicion, BTN_FIN_CARRERA_TRANSICION);
+  inicializarBoton(botonPedido, BTN_PEDIDO);
+  inicializarBoton(botonEmergencia, BTN_EMERGENCIA);
 }
 
 void sensores_actualizar() {

@@ -30,10 +30,20 @@ El diseño documentado en `docs/diagrama-flujo-estados.md` menciona un "fin de c
 
 A propósito: un E-stop no debería depender de que el WiFi o el servidor web estén funcionando. Es el botón físico `BTN_EMERGENCIA`, leído directamente por el microcontrolador con prioridad sobre cualquier otra lógica, en cualquier modo.
 
-## Cómo probarlo
+## Cómo probarlo en el banco (con la placa)
 
 1. Cablear en protoboard según [pines.md](pines.md): 3 LEDs (motor X, motor vástago, error) + 4 botones (fin de carrera X, fin de carrera transición, pedido, emergencia).
 2. Abrir `src/src.ino` en Arduino IDE (o compilar con `arduino-cli compile --fqbn esp32:esp32:esp32 firmware/src`), cargar a la placa.
 3. Abrir el monitor serie (115200 baudios): imprime cada cambio de estado y de modo.
 4. Conectarse desde el celular/notebook a la red WiFi `CajonesBot` (ver clave en [pines.md](pines.md)) y abrir `http://192.168.4.1` — ahí se puede mover X/vástago manualmente y pedir una columna.
 5. Probar también con los botones físicos: `BTN_PEDIDO` arranca la rutina, `BTN_FIN_CARRERA_X` y `BTN_FIN_CARRERA_TRANSICION` avanzan las fases correspondientes, y `BTN_EMERGENCIA` prueba la parada segura (se resetea con `BTN_PEDIDO` mientras la emergencia no esté presionada).
+
+## Tests automáticos (sin placa)
+
+Además de la prueba física de arriba, `../test/` tiene tests que corren en la compu, sin ESP32, compilando los `.cpp` de producción tal cual con un mock de las primitivas de Arduino. Sirven para validar la lógica de la FSM (secuencia completa, prioridad de la emergencia, antirrebote, pedidos ignorados mientras hay una rutina en curso) antes de tocar la placa. Correrlos con:
+
+```
+bash test/run_tests.sh
+```
+
+Ver [test/README.md](../test/README.md) para el detalle.

@@ -26,5 +26,6 @@ Lista de lo que falta decidir antes de poder cerrar la propuesta inicial y empez
 - [x] Diseño visual/UX de la interfaz web del modo manual — versión funcional simple, ver [modo-manual.md](modo-manual.md).
 - [x] Definir si el ESP32 actúa como access point o se conecta a una red existente — Access Point propio (`CajonesBot`).
 - [x] Máquina de estados de la rutina autónoma + modo manual vía web, simulados con LEDs/botones sobre ESP32 (`firmware/src/`), compilado y verificado con `arduino-cli`.
+- [x] Tests automáticos de la máquina de estados, sin necesidad de placa (`test/`, ver [test/README.md](../test/README.md)) — 24/24 en verde. Encontraron y corrigieron un bug real: `sensores_iniciar()` no reseteaba el antirrebote de los botones.
 - [ ] Contraseña definitiva del AP antes de la demo (hoy es un valor de prueba en `firmware/src/servidor_web.cpp`).
 - [ ] Reemplazar `motores.*` y `sensores.*` por el control/lectura real cuando exista la electrónica (drivers de motor, fines de carrera reales) — la máquina de estados y el servidor web no deberían necesitar cambios.
