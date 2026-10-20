@@ -11,13 +11,13 @@ flowchart TB
     end
 
     subgraph Actuadores
-        MX[Motor riel X]
-        MV[Motor vástago<br/>extensión + rotación]
+        MX[Motor X<br/>ruedas]
+        SV[Servo de orientación<br/>línea]
+        MZ[Motor Z<br/>brazo adelante/atrás]
     end
 
     subgraph Sensores
-        SX[Fin de carrera X]
-        ST[Fin de carrera<br/>transición ranura]
+        SC[Óptico de columna<br/>IR]
         SM["Contacto/corriente imán<br/>(opcional)"]
     end
 
@@ -27,20 +27,21 @@ flowchart TB
 
     FA --> MCU
     FA --> MX
-    FA --> MV
+    FA --> MZ
 
-    MCU -->|"driver de motor (TODO: elegir)"| MX
-    MCU -->|"driver de motor (TODO: elegir)"| MV
-    SX --> MCU
-    ST --> MCU
+    MCU -->|"driver L298N"| MX
+    MCU -->|"PWM"| SV
+    MCU -->|"driver L298N"| MZ
+    SC --> MCU
     SM --> MCU
     MCU <--> WEB
 ```
 
 ## Pendiente de definir
 
-- Driver/etapa de potencia para cada motor (tipo de motor todavía no elegido: paso a paso, DC con reductora, o servo).
+- Confirmar si las 2 ruedas comparten un solo canal del L298N (control como un único eje X) o van por canales separados.
 - Dimensionamiento de la fuente de alimentación.
 - Si el electroimán se alimenta directo desde la fuente o mediante un driver/transistor controlado por el ESP32.
+- Si el sensor óptico de columna tiene comparador integrado (salida digital) o es un fotodiodo crudo (necesitaría `analogRead()` + umbral) — ver [pendientes.md](pendientes.md).
 
 Ver [pendientes.md](pendientes.md) para la lista completa de decisiones abiertas.

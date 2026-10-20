@@ -8,9 +8,10 @@ Implementado en `firmware/src/servidor_web.*`.
 
 ## Controles que expone la página
 
-- Mover el carro en X (izquierda / derecha / parar).
-- Mover el vástago (extender / retraer / parar) — un solo control, porque es un único motor que combina extensión y rotación (ver [mecanismo-trabas.md](mecanismo-trabas.md)); no hay un control separado de "rotación".
-- Pedido: "abrir columna N" — dispara la misma rutina autónoma que el pedido por software (`/pedido?columna=N`).
+- Mover el robot en X (izquierda / derecha / parar).
+- Mover el brazo en Z (adelante / atrás / parar).
+- Orientar el servo a una línea (línea 1 / línea 2).
+- Pedido: "abrir columna N, línea M" — dispara la misma rutina autónoma que el pedido por software (`/pedido?columna=N&linea=M`).
 - Estado actual del sistema (modo + fase de la máquina de estados), que se refresca solo cada 1 segundo.
 
 Los controles manuales solo tienen efecto si el sistema está en modo `MANUAL` y no está en `ERROR_SEGURO` (ver `firmware/src/servidor_web.cpp`, `controlManualPermitido()`).
@@ -32,16 +33,13 @@ El sistema tiene un modo global (`MANUAL` / `AUTONOMO`, en `firmware/src/modo.*`
 La consigna del grupo no tenía resuelto cómo llega la orden de qué cajón abrir (en la versión final se integraría con el sistema pick-to-light existente). Para no depender de esa integración, el ESP32 expone un endpoint HTTP simple:
 
 ```
-GET /pedido?columna=N
+GET /pedido?columna=N&linea=M
 ```
 
-Este endpoint dispara la rutina autónoma para la columna N. Hoy lo llama el mismo botón de la interfaz web (para la demo); el día de mañana lo puede llamar cualquier sistema externo, incluido el pick-to-light real, sin tocar el firmware del brazo.
+Este endpoint dispara la rutina autónoma para la columna N, línea M. Hoy lo llama el mismo botón de la interfaz web (para la demo); el día de mañana lo puede llamar cualquier sistema externo, incluido el pick-to-light real, sin tocar el firmware del brazo.
 
 ## Ya resuelto en esta iteración
 
 - ~~Diseño visual/UX de la página~~ — versión funcional simple implementada (botones + polling de estado), suficiente para la demo.
 - ~~Si el ESP32 actúa como access point propio o se conecta a una red existente~~ — Access Point propio (`CajonesBot`).
-
-## Pendiente de definir
-
-- Contraseña definitiva del AP antes de la demo (hoy es un valor de prueba, ver `firmware/pines.md`).
+- ~~Contraseña definitiva del AP~~ — `AbreCajon26`, ver `firmware/pines.md`.

@@ -4,19 +4,19 @@
 
 | Actuador | Función |
 |---|---|
-| Motor riel X | Traslada el carro para seleccionar la columna; también ejecuta el sidestep de despeje. |
-| Motor del vástago | Combina extensión/retracción (Z) y rotación de apertura mediante el mecanismo de trabas por ranura bayoneta. |
+| Motor X (ruedas) | Traslada el robot para seleccionar la columna; también ejecuta el sidestep de despeje y la vuelta a home. |
+| Servo de orientación | Gira el brazo para alcanzar la línea de cajones pedida. |
+| Motor Z (brazo) | Avanza para enganchar el imán con la placa del cajón; al retroceder tira y abre el cajón (ver [mecanismo-apertura.md](mecanismo-apertura.md)). |
 
 ## Sensores
 
 | Sensor | Ubicación | Qué confirma | Decisión que dispara |
 |---|---|---|---|
-| Fin de carrera X | Riel X | Que el carro llegó a la columna pedida | Si no está en posición, no se habilita la fase de extensión (B) |
-| Fin de carrera / óptico en la ranura de trabas | Punto de transición extensión → rotación del vástago | Que el pasador terminó el tramo recto y entró al tramo diagonal | Si no se detecta la transición, el firmware no avanza a la fase de rotación (C); evita romper el mecanismo por forzar el giro antes de tiempo |
-| Opcional: contacto/corriente en el electroimán | Punta del brazo | Que el imán efectivamente enganchó la placa metálica del cajón | Si no hubo contacto, no se ejecuta la rotación (evita tirar al vacío) |
+| Óptico de columna (IR) | Debajo del robot, apunta a marcas sobre la base/riel | Que el robot pasó por una marca de columna | El firmware cuenta flancos de esta lectura mientras se mueve en X; cuando el conteo llega a la columna pedida, detiene la traslación y pasa a orientar la línea |
+| Opcional: contacto/corriente en el imán | Punta del brazo | Que el imán efectivamente enganchó la placa metálica del cajón | Si no hubo contacto, no se ejecuta la apertura (evita tirar al vacío) |
 
-## Por qué hace falta el sensor de la ranura
+## Por qué hace falta contar marcas, no solo detectar una
 
-El motor del vástago no "sabe" en qué parte de la ranura está solo contando pasos: la transición entre el tramo recto (traslación) y el tramo diagonal (rotación) no cae siempre en el mismo paso exacto, por fricción y desgaste del mecanismo. Por eso la decisión de pasar de extensión a rotación depende de un sensor físico, no de un conteo de pasos — este es el sensor que cumple el requisito de la cátedra de "la lectura del sensor debe modificar de manera observable el comportamiento del robot".
+A diferencia de un fin de carrera fijo por columna (como en el diseño anterior de riel+carro), acá el robot se mueve libremente sobre ruedas: una sola lectura booleana del sensor óptico ("hay una marca debajo") no alcanza para saber **a qué columna** llegó. Por eso el firmware cuenta cuántas marcas pasó desde el home y compara contra la columna pedida — este conteo, hecho en software a partir de la lectura del sensor, es la decisión que efectivamente determina el comportamiento del robot (requisito de la cátedra: "la lectura del sensor debe modificar de manera observable el comportamiento del robot").
 
-Detalle del mecanismo en [mecanismo-trabas.md](mecanismo-trabas.md).
+El cambio de línea no necesita un sensor dedicado: un servo se posiciona solo al ángulo comandado, así que esa fase se resuelve con un tiempo fijo de espera (ver [mecanismo-apertura.md](mecanismo-apertura.md)).

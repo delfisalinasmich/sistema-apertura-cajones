@@ -5,12 +5,12 @@
 #include <Arduino.h>
 
 void seguridad_iniciar() {
-  pinMode(LED_ERROR, OUTPUT);
-  digitalWrite(LED_ERROR, LOW);
+  pinMode(PIN_LED_ERROR, OUTPUT);
+  digitalWrite(PIN_LED_ERROR, LOW);
 }
 
 void seguridad_actualizar(bool enErrorSeguro) {
-  digitalWrite(LED_ERROR, enErrorSeguro ? HIGH : LOW);
+  digitalWrite(PIN_LED_ERROR, enErrorSeguro ? HIGH : LOW);
   if (enErrorSeguro) {
     motores_pararTodos();
   }

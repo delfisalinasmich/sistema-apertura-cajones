@@ -12,22 +12,22 @@ TODO: completar nombres del grupo
 
 ## Descripción general
 
-Adaptación del sistema pick-to-light: dada una solicitud por software de una pieza almacenada en una cajonera de una sola fila (piezas chicas y livianas, tipo laboratorio), el sistema traslada un brazo hasta la columna correspondiente y abre el cajón lo suficiente para que la persona lo vea y lo termine de extraer a mano.
+Adaptación del sistema pick-to-light: dada una solicitud por software de una pieza almacenada en una cajonera (varias líneas y columnas, piezas chicas y livianas, tipo laboratorio), el sistema traslada un brazo hasta la columna y línea correspondientes y abre el cajón lo suficiente para que la persona lo vea y lo termine de extraer a mano.
 
 ## Objetivo del robot
 
-Recibir un pedido (columna/cajón), posicionarse automáticamente frente a él y abrirlo mediante un mecanismo de enganche magnético, sin intervención manual continua.
+Recibir un pedido (columna/línea), posicionarse automáticamente frente al cajón y abrirlo mediante un mecanismo de enganche magnético, sin intervención manual continua.
 
 ## Actuadores a utilizar
 
-- Motor para el riel X (traslación del carro, selección de columna).
-- Motor para el vástago (combina extensión/retracción en Z y rotación de apertura mediante mecanismo de trabas por ranura bayoneta).
+- Motor X (ruedas, vía driver L298N) — traslación horizontal del robot, selección de columna.
+- Servo de orientación — gira el brazo para alcanzar la línea de cajones pedida.
+- Motor Z (brazo, vía driver L298N) — extensión/retracción adelante-atrás; al retroceder, abre el cajón (ver [mecanismo-apertura.md](mecanismo-apertura.md)).
 
 ## Sensores a utilizar
 
-- Fin de carrera en el riel X (confirma la columna correcta).
-- Fin de carrera / sensor óptico en la ranura de trabas (confirma la transición extensión → rotación).
-- Opcional: sensor de contacto o de corriente en el electroimán (confirma el enganche antes de rotar).
+- Óptico de columna (IR): confirma, contando marcas, a qué columna llegó el robot.
+- Opcional: sensor de contacto o de corriente en el imán (confirma el enganche antes de abrir).
 
 ## Microcontrolador seleccionado
 
@@ -36,36 +36,37 @@ ESP32 (propuesto, dado el trabajo previo del grupo con el sistema pick-to-light 
 ## Grados de libertad previstos
 
 3, todos actuados:
-1. **X** — traslación del carro sobre el riel (selecciona columna).
-2. **Z** — extensión/retracción del vástago.
-3. **Rotación** — giro del brazo en la punta del vástago (abre el cajón).
+1. **X** — traslación horizontal del robot sobre ruedas (selecciona columna).
+2. **Rotación de línea** — giro del brazo con el servo (selecciona línea).
+3. **Z** — extensión/retracción del brazo (abre el cajón al retroceder).
 
 Ver detalle y justificación en [esquema-general.md](esquema-general.md).
 
 ## Descripción del modo manual
 
-Interfaz web servida por el propio ESP32, con controles para mover el carro en X, extender/retraer el vástago, y disparar manualmente el pedido de una columna (simulando al sistema pick-to-light). Detalle en [modo-manual.md](modo-manual.md).
+Interfaz web servida por el propio ESP32, con controles para mover el robot en X, mover el brazo en Z, orientar el servo a una línea, y disparar manualmente el pedido de una columna/línea (simulando al sistema pick-to-light). Detalle en [modo-manual.md](modo-manual.md).
 
 ## Descripción de la rutina autónoma
 
-Secuencia de 4 fases disparada por un pedido de software (columna N):
-1. Reposo → posicionamiento en X.
-2. Extensión en Z hasta la altura de la fila de cajones.
-3. Rotación del brazo: el imán excéntrico engancha la placa del cajón y lo abre en un arco corto.
-4. Sidestep en X (para no empujar el cajón de nuevo al retirarse) + retracción en Z + vuelta a home.
+Secuencia disparada por un pedido de software (columna N, línea M):
+1. Reposo → traslado en X hasta la columna N.
+2. Orientación: el servo gira el brazo hasta la línea M.
+3. Extensión en Z: el brazo avanza hasta que el imán hace contacto con la placa del cajón.
+4. Apertura: el mismo motor Z retrocede, tira del cajón y lo abre (y de paso vuelve el brazo a su posición retraída).
+5. Sidestep en X (para no empujar el cajón de nuevo al retirarse) + vuelta a home.
 
 Detalle en [diagrama-flujo-estados.md](diagrama-flujo-estados.md).
 
 ## Pieza que se diseñará para impresión 3D
 
-Soporte del pivote con la ranura de trabas (mecanismo bayoneta que combina extensión y rotación con un solo motor) + excéntrica del imán. Ver [pieza-3d.md](pieza-3d.md).
+Soporte del brazo (motor Z + extremo con el imán), montado sobre el eje del servo de orientación. Ver [pieza-3d.md](pieza-3d.md).
 
 ## Lista preliminar de materiales
 
-TODO: completar (motores, driver de motor, ESP32, fines de carrera, imán de neodimio, perfiles/riel, tornillería, filamento de impresión 3D).
+TODO: completar (motor de ruedas, motor del brazo, servo, driver(s) L298N, ESP32, sensor óptico, imán de neodimio, chasis/ruedas, tornillería, filamento de impresión 3D).
 
 ## Principales riesgos o dificultades esperadas
 
-- La pieza de la ranura de trabas es la de mayor tolerancia de todo el proyecto: es esperable iterar varias veces en impresión 3D (FDM) hasta que el pasador no juegue ni se trabe. Conviene prototiparla sola antes de integrar el resto del brazo.
-- La transición extensión → rotación no cae siempre en el mismo paso del motor (fricción, desgaste), por lo que depende de un sensor físico y no de contar pasos.
-- La fuerza del imán hay que calibrarla con pruebas reales (tamaño del imán, con el cajón cargado con la pieza más pesada prevista) para que enganche bien pero también se despegue solo al final del arco de rotación.
+- La fuerza del imán hay que calibrarla con pruebas reales (tamaño del imán, con el cajón cargado con la pieza más pesada prevista) para que enganche bien pero también se despegue sin forzarlo.
+- El sensor óptico de columna depende de que las marcas estén bien espaciadas y sean consistentes — si el robot pierde una marca por velocidad o iluminación, el conteo de columna queda desalineado. Conviene probar el conteo en el banco antes de confiar en él para la demo.
+- Confirmar si el driver L298N elegido alcanza para mover ambos motores (ruedas y brazo) con margen, o si hace falta uno por eje.

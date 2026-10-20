@@ -38,21 +38,23 @@ void loop() {
     maquinaEstados_actualizar();
   }
 
-  // Botón físico de pedido (equivalente al /pedido de la web), útil para
-  // probar el ciclo completo en el banco sin depender del WiFi. Se lee por
-  // FLANCO, no por nivel: el reset de una emergencia exige mantener este
-  // mismo botón presionado (ver seguridad_resetSolicitado()), así que si se
-  // leyera por nivel, el pedido se volvería a disparar solo apenas se
-  // resetea la emergencia, sin que el operador lo haya pedido de nuevo. El
-  // flanco se rastrea en cada vuelta del loop (no solo cuando
-  // debeActualizarFSM es falso) para que quede "consumido" mientras el
-  // botón se mantuvo presionado durante la emergencia.
+  // Botón físico de pedido (PIN_BTN_PEDIDO, equivalente al /pedido de la
+  // web), útil para probar el ciclo completo en el banco sin depender del
+  // WiFi. Pide siempre columna 0 / línea 0: para pedir otra combinación hay
+  // que usar la web. Se lee por FLANCO, no por nivel: el reset de una
+  // emergencia exige mantener este mismo botón presionado (ver
+  // seguridad_resetSolicitado()), así que si se leyera por nivel, el pedido
+  // se volvería a disparar solo apenas se resetea la emergencia, sin que el
+  // operador lo haya pedido de nuevo. El flanco se rastrea en cada vuelta
+  // del loop (no solo cuando debeActualizarFSM es falso) para que quede
+  // "consumido" mientras el botón se mantuvo presionado durante la
+  // emergencia.
   bool pedidoAhora = sensores_pedidoPresionado();
   bool flancoPedido = pedidoAhora && !pedidoPresionadoAntes;
   pedidoPresionadoAntes = pedidoAhora;
 
   if (!debeActualizarFSM && flancoPedido) {
-    maquinaEstados_solicitarPedido(0);
+    maquinaEstados_solicitarPedido(0, 0);
   }
 
   EstadoSistema estadoActual = maquinaEstados_estadoActual();

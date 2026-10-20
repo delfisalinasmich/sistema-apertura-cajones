@@ -11,10 +11,9 @@ struct BotonDebounced {
 
 static const unsigned long DEBOUNCE_MS = 30;
 
-static BotonDebounced botonFinCarreraX = {BTN_FIN_CARRERA_X, HIGH, HIGH, 0};
-static BotonDebounced botonFinCarreraTransicion = {BTN_FIN_CARRERA_TRANSICION, HIGH, HIGH, 0};
-static BotonDebounced botonPedido = {BTN_PEDIDO, HIGH, HIGH, 0};
-static BotonDebounced botonEmergencia = {BTN_EMERGENCIA, HIGH, HIGH, 0};
+static BotonDebounced sensorMarcaColumna = {PIN_SENSOR_COLUMNA, HIGH, HIGH, 0};
+static BotonDebounced botonPedido = {PIN_BTN_PEDIDO, HIGH, HIGH, 0};
+static BotonDebounced botonEmergencia = {PIN_BTN_EMERGENCIA, HIGH, HIGH, 0};
 
 static void actualizarBoton(BotonDebounced &boton) {
   int lectura = digitalRead(boton.pin);
@@ -40,30 +39,23 @@ static void inicializarBoton(BotonDebounced &boton, int pin) {
 }
 
 void sensores_iniciar() {
-  pinMode(BTN_FIN_CARRERA_X, INPUT_PULLUP);
-  pinMode(BTN_FIN_CARRERA_TRANSICION, INPUT_PULLUP);
-  pinMode(BTN_PEDIDO, INPUT_PULLUP);
-  pinMode(BTN_EMERGENCIA, INPUT_PULLUP);
+  pinMode(PIN_SENSOR_COLUMNA, INPUT_PULLUP);
+  pinMode(PIN_BTN_PEDIDO, INPUT_PULLUP);
+  pinMode(PIN_BTN_EMERGENCIA, INPUT_PULLUP);
 
-  inicializarBoton(botonFinCarreraX, BTN_FIN_CARRERA_X);
-  inicializarBoton(botonFinCarreraTransicion, BTN_FIN_CARRERA_TRANSICION);
-  inicializarBoton(botonPedido, BTN_PEDIDO);
-  inicializarBoton(botonEmergencia, BTN_EMERGENCIA);
+  inicializarBoton(sensorMarcaColumna, PIN_SENSOR_COLUMNA);
+  inicializarBoton(botonPedido, PIN_BTN_PEDIDO);
+  inicializarBoton(botonEmergencia, PIN_BTN_EMERGENCIA);
 }
 
 void sensores_actualizar() {
-  actualizarBoton(botonFinCarreraX);
-  actualizarBoton(botonFinCarreraTransicion);
+  actualizarBoton(sensorMarcaColumna);
   actualizarBoton(botonPedido);
   actualizarBoton(botonEmergencia);
 }
 
-bool sensores_finCarreraX() {
-  return botonFinCarreraX.estadoEstable == LOW;
-}
-
-bool sensores_finCarreraTransicion() {
-  return botonFinCarreraTransicion.estadoEstable == LOW;
+bool sensores_marcaColumna() {
+  return sensorMarcaColumna.estadoEstable == LOW;
 }
 
 bool sensores_pedidoPresionado() {

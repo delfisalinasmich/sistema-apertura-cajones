@@ -10,6 +10,7 @@ mkdir -p "$BUILD_DIR"
 c++ -std=c++17 -Wall -Wextra \
   -I "$DIR/firmware/src" -I "$DIR/test/mocks" \
   "$DIR/test/mocks/arduino_mock.cpp" \
+  "$DIR/test/mocks/esp32servo_mock.cpp" \
   "$DIR/test/test_maquina_estados.cpp" \
   "$DIR/firmware/src/motores.cpp" \
   "$DIR/firmware/src/sensores.cpp" \

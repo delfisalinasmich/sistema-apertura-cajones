@@ -4,7 +4,7 @@ Tests nativos de la máquina de estados del firmware, pensados para correr en la
 
 ## Qué prueban
 
-Se compilan **los `.cpp` de producción tal cual** (`motores.cpp`, `sensores.cpp`, `seguridad.cpp`, `modo.cpp`, `maquina_estados.cpp`), no una reimplementación — así el test también prueba el antirrebote real de `sensores.cpp`, no una versión simplificada. Solo se sustituyen las primitivas de Arduino (`millis`, `digitalRead`, `digitalWrite`, `pinMode`) por un mock mínimo en `mocks/`, porque acá no hay ni ESP32 ni el core de Arduino instalado.
+Se compilan **los `.cpp` de producción tal cual** (`motores.cpp`, `sensores.cpp`, `seguridad.cpp`, `modo.cpp`, `maquina_estados.cpp`), no una reimplementación — así el test también prueba el antirrebote real de `sensores.cpp` y el conteo de marcas real de `maquina_estados.cpp`, no una versión simplificada. Solo se sustituyen las primitivas de Arduino (`millis`, `digitalRead`, `digitalWrite`, `pinMode`) y la librería `ESP32Servo` (`attach`, `write`) por mocks mínimos en `mocks/`, porque acá no hay ni ESP32 ni esas librerías instaladas.
 
 `servidor_web.cpp` y `src.ino` quedan fuera (dependen de WiFi/WebServer, específicos del core ESP32) — esos se verifican compilando con `arduino-cli` (ver `firmware/README.md`).
 

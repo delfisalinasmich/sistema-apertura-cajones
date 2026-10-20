@@ -31,23 +31,30 @@ static const char PAGINA_HTML[] PROGMEM = R"HTML(<!DOCTYPE html>
   <p><small>La parada de emergencia es el bot&oacute;n f&iacute;sico, no depende de esta p&aacute;gina.</small></p>
 
   <div class="fila">
-    <strong>Movimiento manual (X)</strong><br>
+    <strong>Movimiento manual (X, ruedas)</strong><br>
     <button onclick="cmd('/manual/x?dir=izq')">&#9664; Izquierda</button>
     <button onclick="cmd('/manual/x?dir=parar')">Parar</button>
     <button onclick="cmd('/manual/x?dir=der')">Derecha &#9654;</button>
   </div>
 
   <div class="fila">
-    <strong>Movimiento manual (v&aacute;stago)</strong><br>
-    <button onclick="cmd('/manual/z?dir=extender')">&#9650; Extender</button>
+    <strong>Movimiento manual (Z, brazo)</strong><br>
+    <button onclick="cmd('/manual/z?dir=adelante')">&#9650; Adelante</button>
     <button onclick="cmd('/manual/z?dir=parar')">Parar</button>
-    <button onclick="cmd('/manual/z?dir=retraer')">&#9660; Retraer</button>
+    <button onclick="cmd('/manual/z?dir=atras')">&#9660; Atr&aacute;s</button>
+  </div>
+
+  <div class="fila">
+    <strong>Orientaci&oacute;n manual (l&iacute;nea)</strong><br>
+    <button onclick="cmd('/manual/linea?valor=0')">L&iacute;nea 1</button>
+    <button onclick="cmd('/manual/linea?valor=1')">L&iacute;nea 2</button>
   </div>
 
   <div class="fila">
     <strong>Pedido (rutina aut&oacute;noma)</strong><br>
-    <input type="number" id="columna" value="0" min="0" style="width:4rem">
-    <button onclick="pedir()">Abrir columna</button>
+    <input type="number" id="columna" value="0" min="0" style="width:4rem"> columna
+    <input type="number" id="linea" value="0" min="0" style="width:4rem"> l&iacute;nea<br>
+    <button onclick="pedir()">Abrir caj&oacute;n</button>
   </div>
 
 <script>
@@ -56,7 +63,8 @@ function cmd(ruta) {
 }
 function pedir() {
   var columna = document.getElementById('columna').value;
-  cmd('/pedido?columna=' + columna);
+  var linea = document.getElementById('linea').value;
+  cmd('/pedido?columna=' + columna + '&linea=' + linea);
 }
 function actualizarEstado() {
   fetch('/estado').then(function (r) { return r.text(); }).then(function (t) {
@@ -87,7 +95,8 @@ static void manejarEstado() {
 
 static void manejarPedido() {
   int columna = server.hasArg("columna") ? server.arg("columna").toInt() : 0;
-  maquinaEstados_solicitarPedido(columna);
+  int linea = server.hasArg("linea") ? server.arg("linea").toInt() : 0;
+  maquinaEstados_solicitarPedido(columna, linea);
   server.send(200, "text/plain", "OK");
 }
 
@@ -97,8 +106,10 @@ static void manejarManualX() {
     return;
   }
   String dir = server.arg("dir");
-  if (dir == "izq" || dir == "der") {
-    motores_moverX();
+  if (dir == "der") {
+    motores_moverX(SENTIDO_POSITIVO);
+  } else if (dir == "izq") {
+    motores_moverX(SENTIDO_NEGATIVO);
   } else {
     motores_pararTodos();
   }
@@ -111,11 +122,23 @@ static void manejarManualZ() {
     return;
   }
   String dir = server.arg("dir");
-  if (dir == "extender" || dir == "retraer") {
-    motores_moverVastago();
+  if (dir == "adelante") {
+    motores_moverZ(SENTIDO_POSITIVO);
+  } else if (dir == "atras") {
+    motores_moverZ(SENTIDO_NEGATIVO);
   } else {
     motores_pararTodos();
   }
+  server.send(200, "text/plain", "OK");
+}
+
+static void manejarManualLinea() {
+  if (!controlManualPermitido()) {
+    server.send(409, "text/plain", "No disponible en este modo/estado");
+    return;
+  }
+  int linea = server.hasArg("valor") ? server.arg("valor").toInt() : 0;
+  motores_orientarLinea(linea);
   server.send(200, "text/plain", "OK");
 }
 
@@ -126,6 +149,7 @@ void servidorWeb_iniciar() {
   server.on("/pedido", manejarPedido);
   server.on("/manual/x", manejarManualX);
   server.on("/manual/z", manejarManualZ);
+  server.on("/manual/linea", manejarManualLinea);
   server.begin();
 }
 

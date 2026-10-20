@@ -1,11 +1,12 @@
 // Tests nativos (sin ESP32) de la máquina de estados real del firmware.
 // Se compilan los .cpp de producción tal cual (ver test/run_tests.sh),
-// mockeando solo las primitivas de Arduino (test/mocks/Arduino.h).
-// Ver test/README.md.
+// mockeando solo las primitivas de Arduino (test/mocks/Arduino.h) y de
+// ESP32Servo (test/mocks/ESP32Servo.h). Ver test/README.md.
 
 #include <cstdio>
 #include <cstdlib>
 #include "Arduino.h"
+#include "ESP32Servo.h"
 #include "pines.h"
 #include "modo.h"
 #include "sensores.h"
@@ -33,8 +34,8 @@ static void reiniciar() {
   maquinaEstados_iniciar();
 }
 
-// Simula presionar/soltar un botón respetando el antirrebote real de
-// sensores.cpp: hace falta que el pin quede estable por más de
+// Simula presionar/soltar un botón o sensor respetando el antirrebote real
+// de sensores.cpp: hace falta que el pin quede estable por más de
 // DEBOUNCE_MS (30ms) entre dos llamadas a sensores_actualizar().
 static void presionar(int pin) {
   mock_setPin(pin, LOW);
@@ -50,6 +51,15 @@ static void soltar(int pin) {
   sensores_actualizar();
 }
 
+// Simula que el robot pasa por una marca de columna (un flanco completo:
+// presionar + soltar), para que maquina_estados.cpp cuente un flanco más.
+static void pasarMarcaColumna() {
+  presionar(PIN_SENSOR_COLUMNA);
+  maquinaEstados_actualizar();
+  soltar(PIN_SENSOR_COLUMNA);
+  maquinaEstados_actualizar();
+}
+
 static void test_estadoInicial() {
   std::printf("test_estadoInicial\n");
   reiniciar();
@@ -61,74 +71,80 @@ static void test_cicloCompletoFeliz() {
   std::printf("test_cicloCompletoFeliz\n");
   reiniciar();
 
-  maquinaEstados_solicitarPedido(3);
+  maquinaEstados_solicitarPedido(3, 1);
   VERIFICAR(maquinaEstados_estadoActual() == ESTADO_MOVIENDO_X, "pedido desde REPOSO pasa a MOVIENDO_X");
   VERIFICAR(modo_actual() == MODO_AUTONOMO, "pedido cambia el modo a AUTONOMO");
   VERIFICAR(maquinaEstados_columnaSolicitada() == 3, "guarda la columna pedida");
+  VERIFICAR(maquinaEstados_lineaSolicitada() == 1, "guarda la línea pedida");
 
-  presionar(BTN_FIN_CARRERA_X);
-  maquinaEstados_actualizar();
-  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_EXTENDIENDO_Z, "fin de carrera X avanza a EXTENDIENDO_Z");
-  soltar(BTN_FIN_CARRERA_X);
-  maquinaEstados_actualizar();
+  // Columna 3: hacen falta 3 marcas del sensor óptico para llegar.
+  pasarMarcaColumna();
+  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_MOVIENDO_X, "con 1 marca de 3 sigue en MOVIENDO_X");
+  pasarMarcaColumna();
+  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_MOVIENDO_X, "con 2 marcas de 3 sigue en MOVIENDO_X");
+  pasarMarcaColumna();
+  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_ORIENTANDO_LINEA, "con 3 marcas avanza a ORIENTANDO_LINEA");
 
-  presionar(BTN_FIN_CARRERA_TRANSICION);
+  mock_avanzarTiempoMs(1100); // > DURACION_ORIENTACION_MS (1000)
   maquinaEstados_actualizar();
-  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_ROTANDO_APERTURA, "fin de carrera de transicion avanza a ROTANDO_APERTURA");
-  soltar(BTN_FIN_CARRERA_TRANSICION);
-  maquinaEstados_actualizar();
+  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_EXTENDIENDO_Z, "tiempo de orientación cumplido avanza a EXTENDIENDO_Z");
+  VERIFICAR(mock_anguloServo() == 90, "el servo quedó en el ángulo de la línea 1 (placeholder)");
 
-  mock_avanzarTiempoMs(1600); // > DURACION_ROTACION_MS (1500)
+  mock_avanzarTiempoMs(1300); // > DURACION_EXTENSION_MS (1200)
   maquinaEstados_actualizar();
-  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_SIDESTEP_X, "tiempo de rotacion cumplido avanza a SIDESTEP_X");
+  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_ABRIENDO, "tiempo de extensión cumplido avanza a ABRIENDO");
+
+  mock_avanzarTiempoMs(1300); // > DURACION_APERTURA_MS (1200)
+  maquinaEstados_actualizar();
+  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_SIDESTEP_X, "tiempo de apertura cumplido avanza a SIDESTEP_X");
 
   mock_avanzarTiempoMs(900); // > DURACION_SIDESTEP_MS (800)
   maquinaEstados_actualizar();
-  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_RETRAYENDO_Z, "tiempo de sidestep cumplido avanza a RETRAYENDO_Z");
-
-  mock_avanzarTiempoMs(1600); // > DURACION_RETRACCION_MS (1500)
-  maquinaEstados_actualizar();
-  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_VOLVIENDO_HOME, "tiempo de retraccion cumplido avanza a VOLVIENDO_HOME");
+  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_VOLVIENDO_HOME, "tiempo de sidestep cumplido avanza a VOLVIENDO_HOME");
 
   mock_avanzarTiempoMs(1100); // > DURACION_VOLVIENDO_HOME_MS (1000)
   maquinaEstados_actualizar();
   VERIFICAR(maquinaEstados_estadoActual() == ESTADO_REPOSO, "tiempo de vuelta a home cumplido vuelve a REPOSO");
   VERIFICAR(modo_actual() == MODO_MANUAL, "al volver a REPOSO el modo vuelve solo a MANUAL");
+  VERIFICAR(mock_anguloServo() == 0, "al volver a REPOSO el servo vuelve a la línea home");
 }
 
 static void test_pedidoIgnoradoConRutinaEnCurso() {
   std::printf("test_pedidoIgnoradoConRutinaEnCurso\n");
   reiniciar();
 
-  maquinaEstados_solicitarPedido(1);
+  maquinaEstados_solicitarPedido(1, 0);
   VERIFICAR(maquinaEstados_estadoActual() == ESTADO_MOVIENDO_X, "primer pedido arranca la rutina");
 
-  maquinaEstados_solicitarPedido(99);
+  maquinaEstados_solicitarPedido(99, 1);
   VERIFICAR(maquinaEstados_estadoActual() == ESTADO_MOVIENDO_X, "un segundo pedido no debe alterar el estado mientras hay una rutina en curso");
   VERIFICAR(maquinaEstados_columnaSolicitada() == 1, "la columna pedida no cambia si el segundo pedido se ignora");
+  VERIFICAR(maquinaEstados_lineaSolicitada() == 0, "la línea pedida no cambia si el segundo pedido se ignora");
 }
 
 static void test_emergenciaConPrioridad() {
   std::printf("test_emergenciaConPrioridad\n");
   reiniciar();
 
-  maquinaEstados_solicitarPedido(2);
-  presionar(BTN_FIN_CARRERA_X);
-  maquinaEstados_actualizar(); // ahora en EXTENDIENDO_Z, motor del vástago "en movimiento"
+  maquinaEstados_solicitarPedido(2, 0);
+  pasarMarcaColumna();
+  pasarMarcaColumna(); // 2 marcas -> ORIENTANDO_LINEA
+  mock_avanzarTiempoMs(1100);
+  maquinaEstados_actualizar(); // -> EXTENDIENDO_Z, motor Z "en movimiento"
 
-  presionar(BTN_EMERGENCIA);
+  presionar(PIN_BTN_EMERGENCIA);
   maquinaEstados_actualizar();
   VERIFICAR(maquinaEstados_estadoActual() == ESTADO_ERROR_SEGURO, "la emergencia fuerza ERROR_SEGURO desde cualquier estado");
-  VERIFICAR(mock_pinEscrito(LED_MOTOR_X) == LOW, "motor X queda detenido en emergencia");
-  VERIFICAR(mock_pinEscrito(LED_MOTOR_VASTAGO) == LOW, "motor del vastago queda detenido en emergencia");
-  VERIFICAR(mock_pinEscrito(LED_ERROR) == HIGH, "el LED de error se enciende");
+  VERIFICAR(mock_pinEscrito(PIN_X_IN1) == LOW && mock_pinEscrito(PIN_X_IN2) == LOW, "motor X queda detenido en emergencia");
+  VERIFICAR(mock_pinEscrito(PIN_Z_IN1) == LOW && mock_pinEscrito(PIN_Z_IN2) == LOW, "motor Z queda detenido en emergencia");
+  VERIFICAR(mock_pinEscrito(PIN_LED_ERROR) == HIGH, "el LED de error se enciende");
 
-  presionar(BTN_PEDIDO);
+  presionar(PIN_BTN_PEDIDO);
   maquinaEstados_actualizar();
   VERIFICAR(maquinaEstados_estadoActual() == ESTADO_ERROR_SEGURO, "no debe resetear mientras la emergencia sigue presionada");
 
-  soltar(BTN_EMERGENCIA);
-  maquinaEstados_actualizar(); // BTN_PEDIDO sigue presionado de antes
+  soltar(PIN_BTN_EMERGENCIA);
+  maquinaEstados_actualizar(); // PIN_BTN_PEDIDO sigue presionado de antes
   VERIFICAR(maquinaEstados_estadoActual() == ESTADO_REPOSO, "soltar emergencia con el pedido ya presionado resetea a REPOSO");
   VERIFICAR(modo_actual() == MODO_MANUAL, "el reset de emergencia devuelve el control a modo MANUAL");
 }
@@ -137,9 +153,9 @@ static void test_antirrebote() {
   std::printf("test_antirrebote\n");
   reiniciar();
 
-  maquinaEstados_solicitarPedido(0); // pasa a MOVIENDO_X
+  maquinaEstados_solicitarPedido(1, 0); // pasa a MOVIENDO_X, hace falta 1 marca
 
-  mock_setPin(BTN_FIN_CARRERA_X, LOW);
+  mock_setPin(PIN_SENSOR_COLUMNA, LOW);
   sensores_actualizar();
   mock_avanzarTiempoMs(10); // menos que DEBOUNCE_MS (30)
   sensores_actualizar();
@@ -149,7 +165,7 @@ static void test_antirrebote() {
   mock_avanzarTiempoMs(40); // ahora sí supera el antirrebote total
   sensores_actualizar();
   maquinaEstados_actualizar();
-  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_EXTENDIENDO_Z, "una vez superado el antirrebote, el fin de carrera si se registra");
+  VERIFICAR(maquinaEstados_estadoActual() == ESTADO_ORIENTANDO_LINEA, "una vez superado el antirrebote, la marca de columna si se registra");
 }
 
 int main() {
