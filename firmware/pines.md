@@ -1,33 +1,36 @@
-# Mapeo de pines — ESP32 dev board
+# Mapeo de pines — ESP32 NodeMCU-32S
 
-Estos pines son **placeholder**, elegidos evitando pines problemáticos del ESP32 (de strapping, de flash interno, o de solo-entrada para señales de salida) — hay que ajustarlos al cableado real una vez armada la electrónica definitiva. La lógica de `maquina_estados.*` no depende de estos valores, solo `pines.h` (ver [firmware/README.md](README.md)).
+Cableado real del robot armado por Coty (ver su guía en [`referencias/`](../referencias/)), con los nombres de `include/pines.h` renombrados para dejar sin ambigüedad qué motor usa cada salida del L298N (`BASE_IN_*` vs `RUEDAS_IN_*`) — antes del renombre, el mismo par de pines (GPIO27/26) significaba cosas distintas según el entorno, y era un pendiente abierto de la guía de Coty.
 
-## Salidas — drivers de motor y servo
-
-| Pin | Señal | Función |
-|---|---|---|
-| GPIO 16 | PIN_X_IN1 | Dirección motor X (ruedas), canal 1 del driver L298N |
-| GPIO 17 | PIN_X_IN2 | Dirección motor X (ruedas), canal 2 del driver L298N |
-| GPIO 18 | PIN_Z_IN1 | Dirección motor Z (brazo), canal 1 del driver L298N |
-| GPIO 19 | PIN_Z_IN2 | Dirección motor Z (brazo), canal 2 del driver L298N |
-| GPIO 21 | PIN_SERVO_ROTACION | Señal PWM del servo de orientación de línea |
-| GPIO 27 | PIN_LED_ERROR | Estado `ERROR_SEGURO` |
-
-Supuestos a confirmar con el cableado real:
-- Las 2 ruedas se controlan con las mismas 2 señales de dirección (ambas reciben el mismo comando — no hay giro en el lugar en este diseño). Si en algún momento hace falta virar, hay que separar el control por rueda.
-- ENA/ENB del L298N se asumen puenteados a habilitado fijo (sin control de velocidad por PWM todavía).
-
-## Entradas — sensor y botones
-
-Todos configurados como `INPUT_PULLUP`: activo = `LOW`.
+## Salidas — L298N y servo
 
 | Pin | Señal | Función |
 |---|---|---|
-| GPIO 34 | PIN_SENSOR_COLUMNA | Sensor óptico IR de columna — leído como entrada digital con antirrebote (ver [pendientes.md](../docs/pendientes.md) sobre digital vs. analógico) |
-| GPIO 35 | PIN_BTN_PEDIDO | Pedido de columna 0/línea 0 (equivalente al endpoint `/pedido` de la web; útil para probar sin WiFi) |
-| GPIO 32 | PIN_BTN_EMERGENCIA | Botón de parada de emergencia — es físico a propósito, no depende de la web (ver [modo-manual.md](../docs/modo-manual.md)) |
+| GPIO 27 | `BASE_IN_A` | L298N IN1 — dirección de la base giratoria |
+| GPIO 26 | `BASE_IN_B` | L298N IN2 — dirección de la base giratoria |
+| GPIO 32 | `RUEDAS_IN_A` | L298N IN3 — dirección de las ruedas |
+| GPIO 33 | `RUEDAS_IN_B` | L298N IN4 — dirección de las ruedas |
+| GPIO 25 | `SERVO_PIN` | Señal del micro servo del brazo (rojo a 5V, marrón a GND común) |
 
-> GPIO 34 y 35 son solo de entrada en la mayoría de las dev boards ESP32 (sin pull-up interno) — llevan resistencia pull-up externa a 3.3V, o se puede recablear a otro par de pines con pull-up interno si es más simple para el armado.
+**Confirmar contra el cableado físico actual** que `BASE_IN_A/B` sigue siendo el motor de la base y `RUEDAS_IN_A/B` el de las ruedas — el mapeo de arriba está tomado de `src/prueba.cpp` (el entorno más reciente y probado), pero si en la placa real están al revés, alcanza con cambiar estos 4 valores en `pines.h`.
+
+ENA y ENB del L298N tienen el jumper puesto: no van al ESP32, control solo HIGH/LOW a velocidad máxima, sin PWM.
+
+## Entradas — sensor
+
+| Pin | Señal | Función |
+|---|---|---|
+| GPIO 34 | `SENSOR_PIN` | Sensor IR TCRT5000 (analógico, salida AO) — ADC1, solo entrada |
+
+El sensor es analógico puro (no un módulo con comparador digital): `analogRead()` + calibración guardada en flash (`include/sensor_linea.h`, entorno `calibracion`). **Falta la resistencia de 10 kΩ entre GPIO34 y 3V3** — sin eso el sensor lee cerca de 0 siempre (ver [pendientes.md](../docs/pendientes.md)).
+
+No hay botón físico de emergencia ni de pedido todavía — la parada de emergencia es el comando Serial `x` (ver [README.md](README.md)).
+
+## Alimentación
+
+- GND de la fuente de los motores, del L298N, del servo y del ESP32 todos unidos.
+- El servo va a 5V, nunca a 3V3 — con USB solo puede reiniciar la placa al moverse; conviene una fuente externa de 5V (por ejemplo, la salida +5V del L298N con batería).
+- `motorPinesSeguros()` (en `pines.h`) pone `BASE_IN_A/B`/`RUEDAS_IN_A/B` en OUTPUT/LOW — se llama primero en `setup()` de todos los entornos, para que ningún motor arranque solo.
 
 ## Modo manual — Access Point del ESP32
 

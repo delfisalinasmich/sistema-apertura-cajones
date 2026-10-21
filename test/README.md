@@ -1,12 +1,14 @@
 # Tests
 
-Tests nativos de la máquina de estados del firmware, pensados para correr en la compu sin necesitar una ESP32 conectada. Complementan (no reemplazan) la prueba física en el banco con LEDs y botones — ver [firmware/README.md](../firmware/README.md).
+Tests nativos de la máquina de estados del firmware, pensados para correr en la compu sin necesitar una ESP32 conectada. Complementan (no reemplazan) la prueba física en el banco — ver [firmware/README.md](../firmware/README.md).
 
 ## Qué prueban
 
-Se compilan **los `.cpp` de producción tal cual** (`motores.cpp`, `sensores.cpp`, `seguridad.cpp`, `modo.cpp`, `maquina_estados.cpp`), no una reimplementación — así el test también prueba el antirrebote real de `sensores.cpp` y el conteo de marcas real de `maquina_estados.cpp`, no una versión simplificada. Solo se sustituyen las primitivas de Arduino (`millis`, `digitalRead`, `digitalWrite`, `pinMode`) y la librería `ESP32Servo` (`attach`, `write`) por mocks mínimos en `mocks/`, porque acá no hay ni ESP32 ni esas librerías instaladas.
+Se compilan **los `.cpp` de producción tal cual** (`ruedas.cpp`, `base.cpp`, `servo_brazo.cpp`, `modo.cpp`, `maquina_estados.cpp`), no una reimplementación — así el test también prueba el conteo real de marcas y el control real de la base/el servo, no una versión simplificada. Solo se sustituyen las primitivas de Arduino (`millis`, `digitalRead`, `digitalWrite`, `pinMode`, `analogRead`), la librería `ESP32Servo` y `Preferences` (NVS) por mocks mínimos en `mocks/`, porque acá no hay ni ESP32 ni esas librerías instaladas.
 
-`servidor_web.cpp` y `src.ino` quedan fuera (dependen de WiFi/WebServer, específicos del core ESP32) — esos se verifican compilando con `arduino-cli` (ver `firmware/README.md`).
+`sensor_linea.h` (de Coty) no se vuelve a probar en profundidad — es un módulo ya correcto que se reutiliza tal cual. Los tests arrancan sin calibración guardada en el mock de `Preferences`, así que `detectaLinea()` usa el umbral por defecto (2048, sin histéresis), suficiente para simular que el sensor "ve" o "no ve" una marca.
+
+`servidor_web.cpp`, `main.cpp` y los entornos de banco (`calibracion.cpp`, `servo_test.cpp`, `prueba.cpp`) quedan fuera (dependen de WiFi/WebServer o son herramientas de banco aparte) — esos se verifican compilando con PlatformIO (ver `firmware/README.md`).
 
 ## Cómo correrlos
 

@@ -3,7 +3,13 @@
 static int anguloActual = 0;
 static int pinActual = -1;
 
+void Servo::setPeriodHertz(int) {}
+
 void Servo::attach(int pin) {
+  pinActual = pin;
+}
+
+void Servo::attach(int pin, int, int) {
   pinActual = pin;
 }
 

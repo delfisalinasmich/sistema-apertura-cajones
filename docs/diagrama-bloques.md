@@ -6,19 +6,19 @@ flowchart TB
         FA[Fuente]
     end
 
-    subgraph Control["ESP32 (microcontrolador principal)"]
+    subgraph Control["ESP32 NodeMCU-32S"]
         MCU[ESP32]
     end
 
     subgraph Actuadores
         MX[Motor X<br/>ruedas]
-        SV[Servo de orientación<br/>línea]
-        MZ[Motor Z<br/>brazo adelante/atrás]
+        BASE[Base giratoria<br/>izquierda/derecha]
+        SV[Servo del brazo<br/>abre el cajón]
     end
 
     subgraph Sensores
-        SC[Óptico de columna<br/>IR]
-        SM["Contacto/corriente imán<br/>(opcional)"]
+        SC[IR TCRT5000<br/>analógico, franjas de columna]
+        SM["Contacto/corriente imán<br/>(no implementado)"]
     end
 
     subgraph Interfaz
@@ -27,21 +27,22 @@ flowchart TB
 
     FA --> MCU
     FA --> MX
-    FA --> MZ
+    FA --> BASE
+    FA -->|"5V, GND común"| SV
 
     MCU -->|"driver L298N"| MX
+    MCU -->|"driver L298N"| BASE
     MCU -->|"PWM"| SV
-    MCU -->|"driver L298N"| MZ
-    SC --> MCU
-    SM --> MCU
+    SC -->|"analogRead, ADC1"| MCU
+    SM -.-> MCU
     MCU <--> WEB
 ```
 
 ## Pendiente de definir
 
-- Confirmar si las 2 ruedas comparten un solo canal del L298N (control como un único eje X) o van por canales separados.
+- Resistencia de 10 kΩ entre GPIO34 y 3V3, sin la cual el sensor lee cerca de 0 siempre.
 - Dimensionamiento de la fuente de alimentación.
-- Si el electroimán se alimenta directo desde la fuente o mediante un driver/transistor controlado por el ESP32.
-- Si el sensor óptico de columna tiene comparador integrado (salida digital) o es un fotodiodo crudo (necesitaría `analogRead()` + umbral) — ver [pendientes.md](pendientes.md).
+- Fuente externa de 5V para el servo (con USB se reinicia la placa al moverse).
+- Confirmar que `BASE_IN_A/B` (GPIO27/26) y `RUEDAS_IN_A/B` (GPIO32/33) coinciden con el cableado físico actual — ver [pines.md](../firmware/pines.md).
 
 Ver [pendientes.md](pendientes.md) para la lista completa de decisiones abiertas.

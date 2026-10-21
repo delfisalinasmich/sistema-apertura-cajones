@@ -8,13 +8,14 @@ BUILD_DIR="$DIR/test/.build"
 mkdir -p "$BUILD_DIR"
 
 c++ -std=c++17 -Wall -Wextra \
-  -I "$DIR/firmware/src" -I "$DIR/test/mocks" \
+  -I "$DIR/firmware/include" -I "$DIR/test/mocks" \
   "$DIR/test/mocks/arduino_mock.cpp" \
   "$DIR/test/mocks/esp32servo_mock.cpp" \
+  "$DIR/test/mocks/preferences_mock.cpp" \
   "$DIR/test/test_maquina_estados.cpp" \
-  "$DIR/firmware/src/motores.cpp" \
-  "$DIR/firmware/src/sensores.cpp" \
-  "$DIR/firmware/src/seguridad.cpp" \
+  "$DIR/firmware/src/ruedas.cpp" \
+  "$DIR/firmware/src/base.cpp" \
+  "$DIR/firmware/src/servo_brazo.cpp" \
   "$DIR/firmware/src/modo.cpp" \
   "$DIR/firmware/src/maquina_estados.cpp" \
   -o "$BUILD_DIR/test_maquina_estados"
