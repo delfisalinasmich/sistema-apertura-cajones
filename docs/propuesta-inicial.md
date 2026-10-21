@@ -67,8 +67,6 @@ Ya definidos por el hardware armado: ESP32 NodeMCU-32S, driver L298N, motor TT c
 
 ## Principales riesgos o dificultades esperadas
 
-- El imán no se suelta solo después de abrir el cajón — falta resolver un paso de desenganche (ver [pendientes.md](pendientes.md)).
-- La asimetría de pulsos de la base (7 de ida, 6 de vuelta) no está verificada como repetible, y solo se calibró yendo hacia un lado — falta confirmar para el lado opuesto.
-- Falta la resistencia de 10 kΩ en el sensor de línea (GPIO34 a 3V3): sin eso, lee cerca de 0 siempre.
+- La calibración de pulsos de la base solo se probó yendo hacia un lado (a propósito, para no arriesgar que se enreden los cables) — abrir cajones del lado opuesto queda fuera de alcance por ahora.
+- Mapeo de pines base/ruedas con una contradicción sin resolver entre el código de `prueba.cpp` y la confirmación de Coty — pendiente un chequeo visual en el banco (ver [pendientes.md](pendientes.md)).
 - El sensor de columna depende de que las franjas estén bien espaciadas y sean consistentes — si el robot pierde una marca por velocidad o iluminación, el conteo de columna queda desalineado.
-- El servo necesita alimentación externa de 5V — con USB reinicia la placa al moverse.

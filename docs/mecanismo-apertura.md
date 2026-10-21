@@ -9,7 +9,7 @@ Un micro servo (tipo SG90), con un imán de neodimio en la punta del brazo:
 - **Avance** — el servo mueve el brazo hacia adelante (ángulo calibrado `ANG_ADELANTE = 90°`) hasta que el imán hace contacto con una tuerca metálica pegada en el frente de cada cajón. Avance de a 3° cada 15ms.
 - **Apertura** — el mismo servo invierte el sentido, despacio (1° cada 30ms, a propósito más lento que el avance, para que el imán no se despegue de golpe), volviendo al ángulo de reposo (`ANG_ATRAS = 40°`). Al retroceder tira del cajón y lo abre. Como retroceder es a la vez "abrir" y "volver a la posición de reposo", no hace falta una fase separada de retracción.
 
-Estos ángulos y velocidades ya están calibrados a mano sobre el hardware real (`src/prueba.cpp`) — no son un placeholder. Pendiente real (de Coty, no resuelto todavía): **el imán no se suelta solo después de abrir** — con el cajón abierto, el imán sigue pegado, y al girar la base de vuelta puede arrastrar el cajón consigo. Falta un paso mecánico o de software para despegarlo (ver [pendientes.md](pendientes.md)).
+Estos ángulos y velocidades ya están calibrados a mano sobre el hardware real (`src/prueba.cpp`) — no son un placeholder. Confirmado por Coty: con estos ángulos, el imán **sí se suelta solo** después de abrir — no hace falta ningún paso extra de desenganche.
 
 El imán se autoalinea al acercarse a la tuerca, lo que tolera mejor errores de impresión 3D o de posicionamiento del robot que un gancho mecánico rígido.
 
@@ -17,7 +17,7 @@ El imán se autoalinea al acercarse a la tuerca, lo que tolera mejor errores de 
 
 Un motor DC con reductora, controlado por un driver L298N, mueve una base giratoria con topes mecánicos a cada extremo — **no tiene encoder ni fin de carrera**, así que no puede posicionarse por ángulo como el servo. Se mueve por un **tren de pulsos de tiempo fijo** (cada pulso: ~50ms de giro + 100ms de freno activo, con 150ms de pausa entre pulsos), calibrado a mano contra los topes físicos: 7 pulsos para orientarse hacia un lado, 6 para volver.
 
-Es un grado de libertad real e independiente de la traslación en X y de la apertura/Z (no abre nada, solo reorienta el brazo). Pendiente real (de Coty): la asimetría 7/6 todavía no se verificó como repetible corriendo la secuencia varias veces seguidas — y la calibración solo se probó yendo hacia un lado; falta confirmar que los mismos pulsos sirven para el lado opuesto (ver [pendientes.md](pendientes.md)).
+Es un grado de libertad real e independiente de la traslación en X y de la apertura/Z (no abre nada, solo reorienta el brazo). La asimetría 7/6 ya se confirmó repetible corriendo la secuencia varias veces seguidas. Pendiente real (de Coty): la calibración solo se probó yendo hacia un lado — a propósito no probaron el lado opuesto todavía, para no arriesgarse a enredar los cables — así que abrir cajones del otro lado queda fuera de alcance por ahora (ver [pendientes.md](pendientes.md)).
 
 ## Por qué esto es más simple que combinar todo en un solo motor
 

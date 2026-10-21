@@ -9,14 +9,23 @@
 //
 // BASE_IN_A/B y RUEDAS_IN_A/B (en vez de IN1-IN4 sin nombre) resuelven el
 // pendiente de la guía de Coty: "definir qué salida del L298N mueve las
-// ruedas y cuál la base". Acá se adopta el mapeo de prueba.cpp (el entorno
-// más reciente y probado físicamente): base en IN1/IN2, ruedas en IN3/IN4.
-// CONFIRMAR contra el cableado físico actual antes de subir a la placa real
-// — si está al revés, alcanza con cambiar estos 4 valores, nada más.
-constexpr int BASE_IN_A = 27;    // L298N IN1
-constexpr int BASE_IN_B = 26;    // L298N IN2
-constexpr int RUEDAS_IN_A = 32;  // L298N IN3
-constexpr int RUEDAS_IN_B = 33;  // L298N IN4
+// ruedas y cuál la base".
+//
+// OJO — hay una contradicción sin resolver todavía (ver docs/pendientes.md):
+// el código de src/prueba.cpp (sin tocar) maneja la base por IN1/IN2
+// (GPIO27/26), y con eso la base giró en las pruebas reales (asimetría
+// 7/6 pulsos confirmada repetible). Pero Coty confirmó por escrito que el
+// cableado real es justo al revés: "Motor B (base giratoria) en IN3/IN4
+// (GPIO32/33)" y "Motor A (ruedas) en IN1/IN2 (GPIO27/26), no usado en esa
+// prueba". Acá se adopta esa confirmación explícita (más detallada que el
+// comentario viejo de prueba.cpp), pero hace falta un chequeo visual rápido
+// en el banco: correr `t` en el entorno `prueba` y mirar qué pieza gira.
+// Si gira la base (no una rueda), estos dos pares están al revés — alcanza
+// con cambiar estos 4 valores, nada más.
+constexpr int BASE_IN_A = 32;    // L298N IN3
+constexpr int BASE_IN_B = 33;    // L298N IN4
+constexpr int RUEDAS_IN_A = 27;  // L298N IN1
+constexpr int RUEDAS_IN_B = 26;  // L298N IN2
 
 // Sensor infrarrojo analógico único (TCRT5000): VCC -> 3V3, GND -> GND,
 // AO -> GPIO34 (ADC1, solo entrada).

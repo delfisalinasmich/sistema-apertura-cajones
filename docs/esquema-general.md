@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Diseñar un mecanismo que, dada una solicitud por software de una pieza almacenada en una cajonera de 3×3 cajones (ver [referencias/Guía del proyecto - Coty.md](../referencias/Guía%20del%20proyecto%20-%20Coty.md)), traslade un brazo hasta la columna correspondiente, lo oriente hacia el lado (izquierda/derecha) donde está el cajón pedido, y lo abra lo suficiente para que la persona lo vea y lo termine de extraer a mano. TODO: confirmar con el grupo la disposición exacta de la cajonera (qué determina "lado" en la práctica).
+Diseñar un mecanismo que, dada una solicitud por software de una pieza almacenada en una cajonera de 3 cajones (ver [referencias/Guía del proyecto - Coty.md](../referencias/Guía%20del%20proyecto%20-%20Coty.md)), traslade un brazo hasta la columna correspondiente, lo oriente hacia el lado (izquierda/derecha) donde está el cajón pedido, y lo abra lo suficiente para que la persona lo vea y lo termine de extraer a mano. Confirmado por Coty: la columna se selecciona con la traslación en X + el sensor de línea, y no hay filas adicionales — el "lado" (base giratoria) ya cubre el tercer GDL.
 
 ## Arquitectura general — 3 grados de libertad
 
